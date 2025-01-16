@@ -17,6 +17,12 @@ class Xinference(LLM):
 
        pip install "xinference[all]"
 
+    If you're simply using the services provided by Xinference, you can utilize the xinference_client package:
+
+    .. code-block:: bash
+
+        pip install xinference_client
+
     Check out: https://github.com/xorbitsai/inference
     To run, you need to start a Xinference supervisor on one server and Xinference workers on the other servers
 
@@ -75,7 +81,7 @@ class Xinference(LLM):
 
     """  # noqa: E501
 
-    client: Any
+    client: Optional[Any] = None
     server_url: Optional[str]
     """URL of the xinference server"""
     model_uid: Optional[str]
@@ -91,11 +97,14 @@ class Xinference(LLM):
     ):
         try:
             from xinference.client import RESTfulClient
-        except ImportError as e:
-            raise ImportError(
-                "Could not import RESTfulClient from xinference. Please install it"
-                " with `pip install xinference`."
-            ) from e
+        except ImportError:
+            try:
+                from xinference_client import RESTfulClient
+            except ImportError as e:
+                raise ImportError(
+                    "Could not import RESTfulClient from xinference. Please install it"
+                    " with `pip install xinference` or `pip install xinference_client`."
+                ) from e
 
         model_kwargs = model_kwargs or {}
 
@@ -147,6 +156,8 @@ class Xinference(LLM):
         Returns:
             The generated string by the model.
         """
+        if self.client is None:
+            raise ValueError("Client is not initialized!")
         model = self.client.get_model(self.model_uid)
 
         generate_config: "LlamaCppGenerateConfig" = kwargs.get("generate_config", {})

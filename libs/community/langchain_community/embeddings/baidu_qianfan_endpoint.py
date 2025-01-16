@@ -4,8 +4,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from langchain_core.embeddings import Embeddings
-from langchain_core.pydantic_v1 import BaseModel, Field, SecretStr
 from langchain_core.utils import convert_to_secret_str, get_from_dict_or_env, pre_init
+from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class QianfanEmbeddingsEndpoint(BaseModel, Embeddings):
     chunk_size: int = 16
     """Chunk size when multiple texts are input"""
 
-    model: str = "Embedding-V1"
+    model: Optional[str] = Field(default=None)
     """Model name
     you could get from https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Nlks5zkzu
     
@@ -71,7 +71,7 @@ class QianfanEmbeddingsEndpoint(BaseModel, Embeddings):
     endpoint: str = ""
     """Endpoint of the Qianfan Embedding, required if custom model used."""
 
-    client: Any
+    client: Any = None
     """Qianfan client"""
 
     init_kwargs: Dict[str, Any] = Field(default_factory=dict)
@@ -80,6 +80,8 @@ class QianfanEmbeddingsEndpoint(BaseModel, Embeddings):
 
     model_kwargs: Dict[str, Any] = Field(default_factory=dict)
     """extra params for model invoke using with `do`."""
+
+    model_config = ConfigDict(protected_namespaces=())
 
     @pre_init
     def validate_environment(cls, values: Dict) -> Dict:
